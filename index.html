@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MotoLog</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MotoLog">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a6cff">
+<style>
+:root{--bg:#f2f2f7;--card:#fff;--tx:#111;--mut:#6b6b76;--acc:#0a6cff;--ok:#1f9d55;--warn:#d98200;--bad:#d93025;--bd:#e3e3e8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--mut:#98989f;--acc:#4c9aff;--ok:#34c759;--warn:#ff9f0a;--bad:#ff6961;--bd:#2c2c2e}}
+:root[data-theme="dark"]{--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--mut:#98989f;--acc:#4c9aff;--ok:#34c759;--warn:#ff9f0a;--bad:#ff6961;--bd:#2c2c2e}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;padding-bottom:84px}
+#app{max-width:640px;margin:0 auto;padding:12px}
+.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--bd)}
+h1{font-size:26px;margin:6px 2px 12px}h2{font-size:18px;margin:0 0 10px}
+.mut{color:var(--mut);font-size:14px}
+.big{font-size:42px;font-weight:700;letter-spacing:-1px}
+button{font:inherit;border:0;border-radius:10px;padding:11px 16px;cursor:pointer}
+.b1{background:var(--acc);color:#fff;font-weight:600}.b2{background:var(--bd);color:var(--tx)}.bd{background:none;color:var(--bad)}
+.row{display:flex;gap:8px;margin-top:12px}.row button{flex:1}
+.task{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--bd)}
+.task:first-of-type{border-top:0}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.ok{background:var(--ok)}.soon{background:var(--warn)}.over{background:var(--bad)}
+.banner{border-left:4px solid var(--warn);font-size:14px}
+input,textarea,select{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin:4px 0 10px}
+label{font-size:13px;color:var(--mut)}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:90%;overflow-y:auto}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+nav button{flex:1;background:none;border-radius:0;color:var(--mut);padding:14px 0}
+nav button.on{color:var(--acc);font-weight:700}
+.ent{padding:10px 0;border-top:1px solid var(--bd)}.ent:first-of-type{border-top:0}
+.top{display:flex;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+<div id="app"><p style="padding:16px">Loading…</p></div>
+<script>window.onerror=function(m,u,l){var a=document.getElementById('app');if(a)a.innerHTML='<p style="padding:16px;color:#d93025">Error: '+m+' (line '+l+')</p>'};</script>
+<div id="modal"></div>
+<nav><button data-a="tab" data-v="bike" id="t1">Bike</button><button data-a="tab" data-v="hist" id="t2">History</button></nav>
+<script>
+(function(){
+var KEY='motolog.v1',S,view='bike',SOON_D=500,SOON_DAYS=14;
+function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function today(){return iso(new Date())}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fmt(n){return Number(n).toLocaleString()}
+function $(id){return document.getElementById(id)}
+function defaults(){var d=today();function t(n,k,m){return{id:uid(),name:n,dk:k,dm:m,lm:0,ld:d}}
+return[t('Engine oil & filter',6000,12),t('Chain clean & lube',1000,null),t('Air filter',12000,24),t('Spark plugs',12000,null),t('Brake fluid',null,24),t('Coolant',null,24),t('Valve clearance check',24000,null)]}
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.tasks)S={bike:'My motorcycle',km:0,unit:'km',tasks:defaults(),log:[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function kmLeft(t){return t.dk?t.lm+t.dk-S.km:null}
+function daysLeft(t){if(!t.dm)return null;var d=parse(t.ld);d.setMonth(d.getMonth()+t.dm);var n=parse(today());return Math.round((d-n)/864e5)}
+function urg(t){var k=kmLeft(t),d=daysLeft(t);
+if((k!==null&&k<0)||(d!==null&&d<0))return 2;
+if((k!==null&&k<=SOON_D)||(d!==null&&d<=SOON_DAYS))return 1;return 0}
+function status(t){var p=[],k=kmLeft(t),d=daysLeft(t);
+if(k!==null)p.push(k>=0?fmt(k)+' '+S.unit+' left':'overdue '+fmt(-k)+' '+S.unit);
+if(d!==null)p.push(d>=0?d+' days left':'overdue '+(-d)+' days');
+return p.length?p.join(' · '):'No interval set'}
+function sorted(){return S.tasks.slice().sort(function(a,b){var u=urg(b)-urg(a);if(u)return u;
+var ka=kmLeft(a),kb=kmLeft(b);ka=ka===null?1e12:ka;kb=kb===null?1e12:kb;if(ka!==kb)return ka-kb;
+var da=daysLeft(a),db=daysLeft(b);da=da===null?1e9:da;db=db===null?1e9:db;return da-db})}
+function render(){
+$('t1').className=view==='bike'?'on':'';$('t2').className=view==='hist'?'on':'';
+var h='';
+if(view==='bike'){
+var ts=sorted(),over=0,soon=0;ts.forEach(function(t){var u=urg(t);if(u===2)over++;else if(u===1)soon++});
+h+='<div class="top"><h1>MotoLog</h1><button class="b2" data-a="settings">Settings</button></div>';
+h+='<div class="card"><div class="mut">'+esc(S.bike)+'</div><div class="big">'+fmt(S.km)+' '+esc(S.unit)+'</div><div class="row"><button class="b1" data-a="mil">Update mileage</button></div></div>';
+if(over||soon)h+='<div class="card banner"><b>'+(over?over+' overdue':'')+(over&&soon?' · ':'')+(soon?soon+' due soon':'')+'</b><div class="mut">Check the list below. This web app can’t send notifications on iOS 15, so open it to see what’s due.</div></div>';
+h+='<div class="card"><div class="top"><h2>Maintenance</h2><button class="b2" data-a="newtask">+ Add</button></div>';
+ts.forEach(function(t){var u=urg(t);h+='<div class="task" data-a="done" data-id="'+t.id+'"><span class="dot '+(u===2?'over':u===1?'soon':'ok')+'"></span><div><b>'+esc(t.name)+'</b><div class="mut">'+status(t)+'</div></div></div>'});
+if(!ts.length)h+='<div class="mut">No tasks yet.</div>';
+h+='</div>';
+}else{
+h+='<div class="top"><h1>History</h1><button class="b2" data-a="note">+ Note</button></div><div class="card">';
+var l=S.log.slice().sort(function(a,b){return b.m-a.m||(b.d>a.d?1:-1)});
+l.forEach(function(e){h+='<div class="ent"><div class="top"><b>'+esc(e.t)+'</b><button class="bd" data-a="delent" data-id="'+e.id+'">Delete</button></div><div class="mut">'+fmt(e.m)+' '+esc(S.unit)+' · '+esc(e.d)+'</div>'+(e.n?'<div>'+esc(e.n).replace(/\n/g,'<br>')+'</div>':'')+'</div>'});
+if(!l.length)h+='<div class="mut">Nothing logged yet. Tap a task to mark it done, or add a note.</div>';
+h+='</div>';}
+$('app').innerHTML=h}
+function modal(h){$('modal').innerHTML='<div class="ov" data-a="bg"><div class="sheet">'+h+'</div></div>'}
+function close(){$('modal').innerHTML=''}
+function btns(save,extra){return '<div class="row"><button class="b2" data-a="close">Cancel</button><button class="b1" data-a="'+save+'">Save</button></div>'+(extra||'')}
+function openMil(){modal('<h2>Update mileage</h2><label>Odometer ('+esc(S.unit)+')</label><input id="f_m" type="text" inputmode="numeric" pattern="[0-9]*" value="'+S.km+'">'+btns('savemil'));setTimeout(function(){var i=$('f_m');if(i){i.focus();i.select()}},150)}
+function openDone(id){var t=S.tasks.filter(function(x){return x.id===id})[0];if(!t)return;
+modal('<h2>'+esc(t.name)+'</h2><div class="mut" style="margin-bottom:8px">Log it as done</div><label>Mileage ('+esc(S.unit)+')</label><input id="f_m" type="text" inputmode="numeric" value="'+S.km+'"><label>Date</label><input id="f_d" type="date" value="'+today()+'"><label>Notes</label><textarea id="f_n" rows="3"></textarea>'+btns('savedone:'+id,'<div class="row"><button class="b2" data-a="edittask" data-id="'+id+'">Edit task</button><button class="bd" data-a="deltask" data-id="'+id+'">Delete task</button></div>'))}
+function openTask(id){var t=S.tasks.filter(function(x){return x.id===id})[0]||{name:'',dk:'',dm:'',lm:S.km,ld:today()};
+modal('<h2>'+(id?'Edit task':'New task')+'</h2><label>Name</label><input id="f_t" value="'+esc(t.name)+'"><label>Repeat every ('+esc(S.unit)+', optional)</label><input id="f_k" type="text" inputmode="numeric" value="'+(t.dk||'')+'"><label>Repeat every (months, optional)</label><input id="f_o" type="text" inputmode="numeric" value="'+(t.dm||'')+'"><label>Last done at ('+esc(S.unit)+')</label><input id="f_m" type="text" inputmode="numeric" value="'+t.lm+'"><label>Last done on</label><input id="f_d" type="date" value="'+t.ld+'">'+btns('savetask:'+(id||'')))}
+function openNote(){modal('<h2>Add note</h2><label>What was done</label><input id="f_t" placeholder="e.g. Replaced rear tire"><label>Mileage ('+esc(S.unit)+')</label><input id="f_m" type="text" inputmode="numeric" value="'+S.km+'"><label>Date</label><input id="f_d" type="date" value="'+today()+'"><label>Notes</label><textarea id="f_n" rows="3"></textarea>'+btns('savenote'))}
+function openSet(){modal('<h2>Settings</h2><label>Motorcycle name</label><input id="f_t" value="'+esc(S.bike)+'"><label>Units</label><select id="f_u"><option value="km"'+(S.unit==='km'?' selected':'')+'>Kilometres</option><option value="mi"'+(S.unit==='mi'?' selected':'')+'>Miles</option></select><label>Backup (copy this text somewhere safe; paste a backup here to restore)</label><textarea id="f_b" rows="4">'+esc(JSON.stringify(S))+'</textarea>'+btns('saveset','<div class="row"><button class="b2" data-a="restore">Restore from text above</button></div>'))}
+function num(id){var v=parseInt($(id).value,10);return isNaN(v)?null:v}
+function addLog(t,m,d,n){S.log.push({id:uid(),t:t,m:m,d:d,n:n});if(m>S.km)S.km=m}
+document.addEventListener('click',function(e){
+var el=e.target.closest('[data-a]');if(!el)return;
+var a=el.getAttribute('data-a'),id=el.getAttribute('data-id'),p=a.split(':');a=p[0];var arg=p[1];
+if(a==='bg'){if(e.target===el)close();return}
+if(a==='tab'){view=el.getAttribute('data-v');render();return}
+if(a==='close')close();
+else if(a==='mil')openMil();
+else if(a==='savemil'){var m=num('f_m');if(m===null)return;S.km=m;close()}
+else if(a==='done')openDone(id);
+else if(a==='savedone'){var m2=num('f_m');if(m2===null)return;var t=S.tasks.filter(function(x){return x.id===arg})[0];t.lm=m2;t.ld=$('f_d').value||today();addLog(t.name,m2,t.ld,$('f_n').value);close()}
+else if(a==='newtask')openTask('');
+else if(a==='edittask')openTask(id);
+else if(a==='savetask'){var nm=$('f_t').value.trim(),k=num('f_k'),o=num('f_o');if(!nm||(!k&&!o))return alert('Enter a name and at least one interval.');
+var tk=arg?S.tasks.filter(function(x){return x.id===arg})[0]:{id:uid()};
+tk.name=nm;tk.dk=k;tk.dm=o;tk.lm=num('f_m')||0;tk.ld=$('f_d').value||today();if(!arg)S.tasks.push(tk);close()}
+else if(a==='deltask'){if(confirm('Delete this task?')){S.tasks=S.tasks.filter(function(x){return x.id!==id});close()}}
+else if(a==='note')openNote();
+else if(a==='savenote'){var ti=$('f_t').value.trim(),m3=num('f_m');if(!ti||m3===null)return;addLog(ti,m3,$('f_d').value||today(),$('f_n').value);close()}
+else if(a==='delent'){if(confirm('Delete this entry?'))S.log=S.log.filter(function(x){return x.id!==id})}
+else if(a==='settings')openSet();
+else if(a==='saveset'){S.bike=$('f_t').value.trim()||S.bike;S.unit=$('f_u').value;close()}
+else if(a==='restore'){try{var r=JSON.parse($('f_b').value);if(!r.tasks||!r.log)throw 0;S=r;close()}catch(x){alert('That backup text isn’t valid.');return}}
+save();render()});
+if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js')}catch(e){}}
+try{load();render()}catch(err){$('app').innerHTML='<p style="padding:16px;color:#d93025">Error: '+esc(err&&err.message)+'</p>'}
+})();
+</script>
+</body>
+</html>
