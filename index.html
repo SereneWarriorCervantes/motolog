@@ -10,36 +10,39 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MotoLog">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a6cff">
+<meta name="theme-color" content="#000000">
 <style>
-:root{--bg:#f2f2f7;--card:#fff;--tx:#111;--mut:#6b6b76;--acc:#0a6cff;--ok:#1f9d55;--warn:#d98200;--bad:#d93025;--bd:#e3e3e8;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--mut:#98989f;--acc:#4c9aff;--ok:#34c759;--warn:#ff9f0a;--bad:#ff6961;--bd:#2c2c2e}}
-:root[data-theme="dark"]{--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--mut:#98989f;--acc:#4c9aff;--ok:#34c759;--warn:#ff9f0a;--bad:#ff6961;--bd:#2c2c2e}
+:root{--bg:#000;--tx:#ececf0;--mut:#8d8d96;--ok:#38d27a;--warn:#ffb020;--bad:#ff5a4f;--bd:#34343a;
+--chrome:linear-gradient(180deg,#fdfdff 0%,#c4c4cc 44%,#6d6d75 50%,#cfcfd7 58%,#f4f4f8 100%);
+--gloss:linear-gradient(180deg,#2b2b30 0%,#151517 49%,#09090b 50%,#111113 100%);
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;padding-bottom:84px}
+body{background:#000 radial-gradient(ellipse at 50% -5%,#2a2a31 0%,#0b0b0d 45%,#000 75%) no-repeat;color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;padding-bottom:90px;min-height:100%}
 #app{max-width:640px;margin:0 auto;padding:12px}
-.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid var(--bd)}
-h1{font-size:26px;margin:6px 2px 12px}h2{font-size:18px;margin:0 0 10px}
+.card{background:linear-gradient(180deg,#1c1c20 0%,#0e0e10 52%,#070708 100%);border-radius:16px;padding:14px;margin-bottom:14px;border:1px solid #3b3b42;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 10px 24px rgba(0,0,0,.7)}
+h1,h2{background:var(--chrome);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+h1{font-size:28px;margin:6px 2px 12px;letter-spacing:.5px}h2{font-size:19px;margin:0 0 10px}
 .mut{color:var(--mut);font-size:14px}
-.big{font-size:42px;font-weight:700;letter-spacing:-1px}
-button{font:inherit;border:0;border-radius:10px;padding:11px 16px;cursor:pointer}
-.b1{background:var(--acc);color:#fff;font-weight:600}.b2{background:var(--bd);color:var(--tx)}.bd{background:none;color:var(--bad)}
+.big{font-size:44px;font-weight:800;letter-spacing:-1px;background:var(--chrome);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,.8))}
+button{font:inherit;border:0;border-radius:12px;padding:11px 16px;cursor:pointer}
+.b1{background:var(--chrome);color:#101012;font-weight:700;text-shadow:0 1px 0 rgba(255,255,255,.55);box-shadow:inset 0 1px 0 #fff,0 3px 8px rgba(0,0,0,.7)}
+.b2{background:var(--gloss);color:#e8e8ee;border:1px solid #4d4d55;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 3px 8px rgba(0,0,0,.6)}
+.bd{background:none;color:var(--bad)}
 .row{display:flex;gap:8px;margin-top:12px}.row button{flex:1}
-.task{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--bd)}
+.task{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid #2a2a2f}
 .task:first-of-type{border-top:0}
-.dot{width:12px;height:12px;border-radius:50%;flex:none}
-.ok{background:var(--ok)}.soon{background:var(--warn)}.over{background:var(--bad)}
+.dot{width:13px;height:13px;border-radius:50%;flex:none;box-shadow:inset 0 2px 2px rgba(255,255,255,.55),0 0 9px currentColor}
+.ok{background:var(--ok);color:var(--ok)}.soon{background:var(--warn);color:var(--warn)}.over{background:var(--bad);color:var(--bad)}
 .banner{border-left:4px solid var(--warn);font-size:14px}
-input,textarea,select{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin:4px 0 10px}
+input,textarea,select{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid #4a4a52;background:linear-gradient(180deg,#050506,#111113);color:var(--tx);margin:4px 0 10px;box-shadow:inset 0 2px 5px rgba(0,0,0,.8)}
 label{font-size:13px;color:var(--mut)}
-.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
-.sheet{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:90%;overflow-y:auto}
-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:linear-gradient(180deg,#232327 0%,#111113 40%,#08080a 100%);border-top:1px solid #6a6a72;width:100%;max-width:640px;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:90%;overflow-y:auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--gloss);border-top:1px solid #6a6a72;padding-bottom:env(safe-area-inset-bottom,0px);z-index:10;box-shadow:0 -6px 18px rgba(0,0,0,.8)}
 nav button{flex:1;background:none;border-radius:0;color:var(--mut);padding:14px 0}
-nav button.on{color:var(--acc);font-weight:700}
-.ent{padding:10px 0;border-top:1px solid var(--bd)}.ent:first-of-type{border-top:0}
+nav button.on{color:#fff;font-weight:700;text-shadow:0 0 10px rgba(255,255,255,.55)}
+.ent{padding:10px 0;border-top:1px solid #2a2a2f}.ent:first-of-type{border-top:0}
 .top{display:flex;justify-content:space-between;align-items:center}
 </style>
 </head>
